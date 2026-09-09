@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 from readability import Document
 import trafilatura
 import re
+from langchain.tools import tool
 
 load_dotenv()
 
@@ -18,7 +19,7 @@ DEFAULT_HEADERS = {
         "Chrome/126.0.0.0 Safari/537.36"
     )
 }
-
+@tool
 def web_search(query:str)->str:
     '''
     This function takes a query string as input and returns the search results from Tavily API. Usually, used for recent and reliaable information.
@@ -43,7 +44,7 @@ def web_search(query:str)->str:
     except Exception as e: #Rather than crashing the prgm we catch the exception and return the error message
         return str(e)
 
-
+@tool
 def scrape_url(url:str)->str:
     '''
     This function takes a URL as input and returns the text content of the webpage. It uses BeautifulSoup to parse the HTML and extract the text.
