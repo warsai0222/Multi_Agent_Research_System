@@ -12,6 +12,13 @@ load_dotenv() #load environment variables from .env file
 
 
 #model initialization
+
+search_model = ChatGroq(
+    model="openai/gpt-oss-20b",
+    temperature=0,
+    max_tokens=800
+)
+
 model = ChatGroq(
     model="openai/gpt-oss-20b",
     temperature=0,
@@ -21,51 +28,66 @@ model = ChatGroq(
 #search agent creation
 def build_search_agent():
     return create_agent(
-        model=model,
-        tools= [web_search],
-        system_prompt ="""
-            You are a web research retrieval agent.
+        model=search_model,
+        tools=[web_search],
+        system_prompt="""
+        You are a web research retrieval agent.
 
-            Your job is to find the most relevant, recent, and reliable webpages for the user's query.
+        Your job is to find a small set of recent, reliable, and sufficiently
+        diverse sources that collectively provide strong coverage of the user's
+        research question.
 
-            You have access to a web_search tool.
+        You have access to the web_search tool.
 
-            Instructions:
-            1. Search the web for information relevant to the user's query.
-            2. Prefer authoritative, trustworthy, and recent sources.
-            3. Select only sources that are likely to contain useful information for answering the query.
-            4. Return the URLs of the best sources you find.
-            5. Do not write the final answer to the user's question.
-            6. Do not summarize the webpages in detail. Another agent will scrape and analyze the content.
-            7. Avoid duplicate, low-quality, or irrelevant sources.
-            8. If no useful sources are found, return "No relevant sources found."
-            """
+        Follow this process:
 
+        1. Perform an initial web search for the user's research topic.
+
+        2. Examine the titles and snippets returned by the search tool and assess
+           whether the results provide sufficient coverage of the main aspects
+           of the topic.
+
+        3. Consider coverage sufficient when the sources:
+           - directly address the user's question,
+           - come from credible or authoritative sources,
+           - provide more than one perspective or aspect of the topic where relevant,
+           - and contain enough information for another agent to build a useful report.
+
+        4. If the initial search has a clear information gap, perform ONE additional
+           targeted search specifically aimed at filling that gap.
+
+        5. Do not perform another search if the initial results already provide
+           sufficient coverage.
+
+        6. Prefer primary sources, government or institutional publications,
+           academic research, reputable industry reports, and established
+           news or analytical organizations.
+
+        7. Avoid duplicate sources, low-quality blogs, SEO content, and sources
+           that do not directly contribute useful evidence.
+
+        8. Select at most 5 of the strongest sources from all search results.
+
+        9. Do not answer the user's research question.
+           Do not write the research report.
+           Do not provide detailed summaries.
+
+        10. Return the selected sources in exactly this format:
+
+            Source 1:
+            Title: <title>
+            URL: <url>
+
+            Source 2:
+            Title: <title>
+            URL: <url>
+
+        If no reliable sources can be found, return:
+        No relevant sources found.
+        """
     )
 
-#scrape agent creation
-def build_scrape_agent():
-    return create_agent(
-        model=model,
-        tools= [scrape_url],
-        system_prompt = """
-            You are a web scraping agent.
-
-            Your job is to extract the text content from a given webpage URL.
-
-            You have access to a scrape_url tool.
-
-            Instructions:
-            1. Use the scrape_url tool to retrieve the webpage content.
-            2. Return the extracted text content from the tool.
-            3. Do not answer the original research question.
-            4. Do not summarize, analyze, or rewrite the content.
-            5. Do not invent or add information that was not returned by the scrape_url tool.
-            6. Avoid unnecessary duplicate or irrelevant webpage content.
-            7. If the webpage cannot be scraped or contains no useful content, return:
-            "No useful content found."
-            """
-    )
+#We don't need to create a separate scrape agent because we can use the scrape_url tool directly in the pipeline. The scrape_url tool is designed to extract text content from a given URL, which is exactly what we need for the scraping step of our research workflow.
 
 #writer agent creation
 writer_prompt = ChatPromptTemplate.from_messages([
@@ -85,7 +107,11 @@ writer_prompt = ChatPromptTemplate.from_messages([
         - Include quantitative evidence whenever it is available.
         - Do not infer conclusions that are not supported by the research.
         - If evidence is limited, explicitly state that limitation.
-        - If no report was generated by the scraping agent, explicitly state that no report is available for evaluation, and move ahead and return "No report was generated, and hence can't be evaluated."
+        - Use clean, simple markdown only.
+        - Avoid broken markdown formatting.
+        - Do not use unnecessary italics.
+        - Avoid large tables unless absolutely necessary.
+        - Prefer section headings and bullet points over tables.
         """
     ),
     (
@@ -110,7 +136,7 @@ writer_prompt = ChatPromptTemplate.from_messages([
         Explain the topic, why it matters, and the scope of the report.
 
         ## Key Findings
-        Discuss the most important findings in detail.
+        Present at least 3 key findings.
         For each finding:
         - explain what the evidence shows
         - identify which source supports it
@@ -136,7 +162,12 @@ writer_prompt = ChatPromptTemplate.from_messages([
         ## Sources
         List only URLs that appear in the provided research.
 
-        Write a detailed, analytical report rather than a brief summary.
+        Important formatting instructions:
+        - Use clean markdown.
+        - Use bullet points where helpful.
+        - Do not use tables.
+        - Do not use italic markdown unless necessary.
+        - Ensure proper spacing and punctuation.
         """
     )
 ])
