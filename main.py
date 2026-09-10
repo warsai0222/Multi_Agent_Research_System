@@ -1,4 +1,7 @@
-from src.tools.tools import web_search, scrape_url
+from src.pipelines.pipeline import research_pipeline
 
-r=web_search.invoke("What is the latest research on quantum computing?")
-print(r)
+topic = "The impact of AI on the job market in 2026"
+
+result = research_pipeline(topic)
+
+print(result)
