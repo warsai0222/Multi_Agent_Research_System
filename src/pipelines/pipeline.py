@@ -1,9 +1,10 @@
 from src.agents.agents.agents import (
     build_search_agent,
-    build_scrape_agent,
     write_chain,
     critic_chain
 )
+
+from src.tools.tools import scrape_url
 
 import time
 import re
@@ -50,35 +51,30 @@ def research_pipeline(topic: str, progress_callback=None) -> dict:
         # ---------------------------
         update_stage("scrape")
 
-        reader_agent = build_scrape_agent()
-
         urls = re.findall(
-                        r'URL:\s*(https?://\S+)',
-                        state["search_results"]
-                    )
+            r'URL:\s*(https?://\S+)',
+            state["search_results"]
+        )
+
+        if not urls:
+            raise ValueError("No URLs found in search results.")
 
         reader_results = ""
 
         for url in urls[:3]:
-            result = reader_agent.invoke({
-                "messages": [
-                    (
-                        "user",
-                        f"""
-                        Scrape the following URL and return the extracted webpage content.
+            scraped_text = scrape_url(url)
 
-                        URL:
-                        {url}
-                        """
-                    )
-                ]
-            })
+            reader_results += (
+                f"\nSource: {url}\n"
+                f"{scraped_text[:5000]}\n"
+            )
 
-            scraped_text = result["messages"][-1].content
-            reader_results += f"\nSource: {url}\n{scraped_text[:5000]}\n"
             time.sleep(1)
 
         state["scraped_content"] = reader_results
+
+        if not state["scraped_content"].strip():
+            raise ValueError("No useful content was scraped.")
 
         # ---------------------------
         # Step 3: Write
