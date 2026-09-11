@@ -1,11 +1,9 @@
 #create agents
-
-import os
 from langchain.agents import create_agent
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser #it is used to parse the output of the agent into a string format, it's required because the agent's output is in a structured format and we need to convert it into a string format for further processing.
-from src.tools.tools import web_search, scrape_url
+from langchain_core.output_parsers import StrOutputParser # Converts the LLM response object into a plain Python string.
+from src.tools.tools import web_search
 from dotenv import load_dotenv
 
 load_dotenv() #load environment variables from .env file
@@ -226,8 +224,10 @@ critic_prompt = ChatPromptTemplate.from_messages([
             and whether it is sufficiently reliable and complete.
             Do not repeat all previous points in detail.
         7. If applicable:
-           - if no report was returned don't generate a summary and exclusively return "No report was generated, and hence can't be evaluated."
-        """
+           - If no useful scraped research content was provided, do not generate an evaluation.
+            Exclusively return:
+            "No report was generated, and hence can't be evaluated."
+                    """
     )
 ])
 

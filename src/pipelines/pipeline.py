@@ -62,7 +62,9 @@ def research_pipeline(topic: str, progress_callback=None) -> dict:
         reader_results = ""
 
         for url in urls[:3]:
-            scraped_text = scrape_url(url)
+            scraped_text = scrape_url.invoke({
+                "url": url
+            })
 
             reader_results += (
                 f"\nSource: {url}\n"
@@ -75,7 +77,6 @@ def research_pipeline(topic: str, progress_callback=None) -> dict:
 
         if not state["scraped_content"].strip():
             raise ValueError("No useful content was scraped.")
-
         # ---------------------------
         # Step 3: Write
         # ---------------------------
