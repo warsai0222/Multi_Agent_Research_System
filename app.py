@@ -70,6 +70,49 @@ html, body, [class*="css"] {
 
 
 /* ======================================================
+   STREAMLIT MARKDOWN — FORCE LIGHT MODE TEXT
+====================================================== */
+
+.stMarkdown,
+.stMarkdown p,
+.stMarkdown li,
+.stMarkdown span,
+.stMarkdown div {
+    color: #334155 !important;
+}
+
+.stMarkdown h1,
+.stMarkdown h2,
+.stMarkdown h3,
+.stMarkdown h4,
+.stMarkdown h5,
+.stMarkdown h6 {
+    color: #111827 !important;
+}
+
+.stMarkdown strong,
+.stMarkdown b {
+    color: #1e293b !important;
+}
+
+.stMarkdown a {
+    color: #2563eb !important;
+}
+
+.stMarkdown code {
+    color: #7c3aed !important;
+    background: #f1f5f9 !important;
+    padding: 0.1rem 0.25rem;
+    border-radius: 4px;
+}
+
+.stMarkdown blockquote {
+    color: #475569 !important;
+    border-left-color: #6366f1 !important;
+}
+
+
+/* ======================================================
    HERO
 ====================================================== */
 
@@ -127,29 +170,12 @@ html, body, [class*="css"] {
             rgba(79,70,229,0.22),
             transparent
         );
-
     margin: 1.8rem 0;
 }
 
 
 /* ======================================================
-   INPUT CARD
-====================================================== */
-
-.input-card {
-    background: rgba(255,255,255,0.88);
-    border: 1px solid #e2e8f0;
-    border-radius: 22px;
-    padding: 2rem 2.3rem;
-    margin-bottom: 1.4rem;
-
-    box-shadow:
-        0 12px 40px rgba(15,23,42,0.06);
-}
-
-
-/* ======================================================
-   TEXT INPUT
+   INPUT
 ====================================================== */
 
 .stTextInput > div > div > input {
@@ -157,12 +183,9 @@ html, body, [class*="css"] {
     border: 1px solid #dbe3ef !important;
     border-radius: 12px !important;
     color: #111827 !important;
-
     font-family: 'DM Sans', sans-serif !important;
     font-size: 1rem !important;
-
     padding: 0.8rem 1rem !important;
-
     transition: all 0.2s ease !important;
 }
 
@@ -195,29 +218,21 @@ html, body, [class*="css"] {
         ) !important;
 
     color: white !important;
-
     font-family: 'Syne', sans-serif !important;
     font-weight: 700 !important;
     font-size: 0.95rem !important;
-
     letter-spacing: 0.03em !important;
-
     border: none !important;
     border-radius: 12px !important;
-
     padding: 0.8rem 2.2rem !important;
-
     transition: all 0.18s ease !important;
-
     box-shadow:
         0 8px 28px rgba(79,70,229,0.18) !important;
-
     width: 100%;
 }
 
 .stButton > button:hover {
     transform: translateY(-2px) !important;
-
     box-shadow:
         0 12px 32px rgba(79,70,229,0.26) !important;
 }
@@ -228,35 +243,23 @@ html, body, [class*="css"] {
 ====================================================== */
 
 .step-card {
-    background: rgba(255,255,255,0.82);
-
-    border:
-        1px solid #e2e8f0;
-
+    background: rgba(255,255,255,0.88);
+    border: 1px solid #e2e8f0;
     border-radius: 18px;
-
     padding: 1.4rem 1.6rem;
-
     margin-bottom: 1rem;
-
     position: relative;
     overflow: hidden;
-
     transition: all 0.25s ease;
-
     box-shadow:
         0 8px 24px rgba(15,23,42,0.04);
 }
 
 .step-card:hover {
     transform: translateY(-2px);
-
     box-shadow:
         0 12px 30px rgba(15,23,42,0.07);
 }
-
-
-/* ACTIVE STEP */
 
 .step-card.active {
     border-color: #6366f1;
@@ -275,28 +278,18 @@ html, body, [class*="css"] {
         pulseCard 1.7s ease-in-out infinite;
 }
 
-
-/* DONE STEP */
-
 .step-card.done {
     border-color: #86efac;
     background: #f0fdf4;
 }
 
-
-/* LEFT BAR */
-
 .step-card::before {
     content: '';
-
     position: absolute;
-
     left: 0;
     top: 0;
     bottom: 0;
-
     width: 4px;
-
     background: #e2e8f0;
 }
 
@@ -307,9 +300,6 @@ html, body, [class*="css"] {
 .step-card.done::before {
     background: #22c55e;
 }
-
-
-/* ACTIVE PULSE */
 
 @keyframes pulseCard {
 
@@ -329,7 +319,6 @@ html, body, [class*="css"] {
     }
 }
 
-
 .step-header {
     display: flex;
     align-items: center;
@@ -338,36 +327,25 @@ html, body, [class*="css"] {
 
 .step-num {
     font-family: 'DM Mono', monospace;
-
     font-size: 0.68rem;
-
     font-weight: 500;
-
     letter-spacing: 0.15em;
-
     color: #6366f1;
 }
 
 .step-title {
     font-family: 'Syne', sans-serif;
-
     font-size: 1rem;
-
     font-weight: 700;
-
     color: #172033;
 }
 
 .step-status {
     margin-left: auto;
-
     font-family: 'DM Mono', monospace;
-
     font-size: 0.68rem;
-
     letter-spacing: 0.08em;
 }
-
 
 .status-waiting {
     color: #94a3b8;
@@ -385,176 +363,71 @@ html, body, [class*="css"] {
 
 .step-desc {
     font-size: 0.82rem;
-
     color: #64748b;
-
     margin-top: 0.45rem;
-
-    padding-left: 0;
 }
 
 
 /* ======================================================
-   SECTION HEADING
+   SECTION HEADINGS
 ====================================================== */
 
 .section-heading {
     font-family: 'Syne', sans-serif;
-
     font-size: 1.3rem;
-
     font-weight: 700;
-
     color: #172033;
-
     margin: 1.2rem 0 1rem;
 }
 
 
 /* ======================================================
-   RESULT PANELS
+   RESULT CARDS
 ====================================================== */
 
-.result-panel {
+.content-card {
     background: #ffffff;
-
-    border:
-        1px solid #e2e8f0;
-
-    border-radius: 18px;
-
-    padding: 1.7rem 1.9rem;
-
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 2rem 2.4rem;
     margin-top: 1rem;
-
     margin-bottom: 1.5rem;
-
     box-shadow:
-        0 8px 24px rgba(15,23,42,0.04);
+        0 10px 30px rgba(15,23,42,0.05);
 }
-
-.result-panel-title {
-    font-family: 'DM Mono', monospace;
-
-    font-size: 0.7rem;
-
-    font-weight: 500;
-
-    letter-spacing: 0.18em;
-
-    text-transform: uppercase;
-
-    color: #4f46e5;
-
-    margin-bottom: 1rem;
-
-    padding-bottom: 0.7rem;
-
-    border-bottom:
-        1px solid #eef2f7;
-}
-
-.result-content {
-    font-size: 0.92rem;
-
-    line-height: 1.8;
-
-    color: #475569;
-
-    white-space: pre-wrap;
-
-    word-break: break-word;
-}
-
-
-/* ======================================================
-   REPORT PANEL
-====================================================== */
-
-.report-panel {
-    background: #ffffff;
-
-    border:
-        1px solid #dbeafe;
-
-    border-radius: 20px;
-
-    padding: 2rem 2.4rem;
-
-    margin-top: 1rem;
-
-    box-shadow:
-        0 10px 32px rgba(37,99,235,0.06);
-}
-
-
-/* ======================================================
-   CRITIC PANEL
-====================================================== */
-
-.feedback-panel {
-    background: #ffffff;
-
-    border:
-        1px solid #bbf7d0;
-
-    border-radius: 20px;
-
-    padding: 2rem 2.4rem;
-
-    margin-top: 1rem;
-
-    box-shadow:
-        0 10px 32px rgba(34,197,94,0.06);
-}
-
 
 .panel-label {
     font-family: 'DM Mono', monospace;
-
     font-size: 0.7rem;
-
     letter-spacing: 0.18em;
-
     text-transform: uppercase;
-
-    margin-bottom: 1.2rem;
-
+    margin-bottom: 1rem;
     padding-bottom: 0.7rem;
 }
 
-
 .panel-label.blue {
     color: #2563eb;
-
     border-bottom:
         1px solid #dbeafe;
 }
 
-
 .panel-label.green {
     color: #16a34a;
-
     border-bottom:
         1px solid #dcfce7;
 }
 
 
 /* ======================================================
-   EXPANDER
+   EXPANDERS
 ====================================================== */
 
 details {
     background: #ffffff;
-
     border-radius: 14px;
-
-    border:
-        1px solid #e2e8f0;
-
+    border: 1px solid #e2e8f0;
     padding: 0.2rem 0.8rem;
 }
-
 
 details summary {
     font-family:
@@ -573,21 +446,31 @@ details summary {
 
 
 /* ======================================================
+   TEXT AREA
+====================================================== */
+
+.stTextArea textarea {
+    background: #f8fafc !important;
+    color: #334155 !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    font-family: 'DM Mono', monospace !important;
+    font-size: 0.78rem !important;
+}
+
+
+/* ======================================================
    DOWNLOAD BUTTON
 ====================================================== */
 
 .stDownloadButton > button {
     border-radius: 10px !important;
-
     border:
         1px solid #c7d2fe !important;
-
     background:
         #eef2ff !important;
-
     color:
         #4338ca !important;
-
     font-weight:
         600 !important;
 }
@@ -707,7 +590,7 @@ def step_card(
 
 
 # =========================================================
-# PIPELINE STATE HELPER
+# PIPELINE STATE
 # =========================================================
 
 stage_order = [
@@ -851,7 +734,7 @@ with col_input:
 
 
 # =========================================================
-# RIGHT — LIVE PIPELINE
+# RIGHT — PIPELINE
 # =========================================================
 
 with col_pipeline:
@@ -1003,7 +886,6 @@ if result is not None:
     </div>
     """)
 
-
     # -----------------------------------------------------
     # ERROR
     # -----------------------------------------------------
@@ -1011,7 +893,6 @@ if result is not None:
     if isinstance(result, str):
 
         st.error(result)
-
 
     # -----------------------------------------------------
     # SUCCESS
@@ -1087,16 +968,13 @@ if result is not None:
         if report:
 
             st.html("""
-            <div class="report-panel">
-
-                <div class="panel-label blue">
-                    📝 Final Research Report
-                </div>
-
+            <div class="panel-label blue">
+                📝 Final Research Report
             </div>
             """)
 
-            st.markdown(report)
+            with st.container(border=True):
+                st.markdown(report)
 
             st.download_button(
                 label="⬇ Download Report (.md)",
@@ -1110,22 +988,19 @@ if result is not None:
 
 
         # =================================================
-        # CRITIC
+        # CRITIC FEEDBACK
         # =================================================
 
         if critique:
 
             st.html("""
-            <div class="feedback-panel">
-
-                <div class="panel-label green">
-                    🧠 Critic Evaluation
-                </div>
-
+            <div class="panel-label green">
+                🧠 Critic Evaluation
             </div>
             """)
 
-            st.markdown(critique)
+            with st.container(border=True):
+                st.markdown(critique)
 
 
 # =========================================================
