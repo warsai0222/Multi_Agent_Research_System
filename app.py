@@ -1,5 +1,4 @@
 import time
-
 import streamlit as st
 
 from src.pipelines.pipeline import research_pipeline
@@ -21,21 +20,21 @@ st.set_page_config(
 # SESSION STATE
 # =========================================================
 
-if "results" not in st.session_state:
-    st.session_state.results = None
+DEFAULT_SESSION_STATE = {
+    "results": None,
+    "running": False,
+    "current_stage": "waiting",
+    "failed_stage": None,
+    "topic_input": "",
+}
 
-if "running" not in st.session_state:
-    st.session_state.running = False
-
-if "current_stage" not in st.session_state:
-    st.session_state.current_stage = "waiting"
-
-if "topic_input" not in st.session_state:
-    st.session_state.topic_input = ""
+for key, value in DEFAULT_SESSION_STATE.items():
+    if key not in st.session_state:
+        st.session_state[key] = value
 
 
 # =========================================================
-# CUSTOM CSS — LIGHT MODE
+# CUSTOM CSS
 # =========================================================
 
 st.html(
@@ -45,8 +44,7 @@ st.html(
     @import url(
         'https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800'
         '&family=DM+Mono:wght@300;400;500'
-        '&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300'
-        '&display=swap'
+        '&family=DM+Sans:wght@300;400;500;600&display=swap'
     );
 
 
@@ -62,32 +60,26 @@ st.html(
     body,
     [class*="css"] {
         font-family: 'DM Sans', sans-serif;
-        color: #172033 !important;
-    }
-
-    body {
-        background: #ffffff;
+        color: #1e293b !important;
     }
 
     .stApp {
-        color: #172033 !important;
-
         background:
             radial-gradient(
                 circle at top left,
-                rgba(59, 130, 246, 0.10),
-                transparent 30%
+                rgba(59, 130, 246, 0.09),
+                transparent 28%
             ),
             radial-gradient(
                 circle at bottom right,
-                rgba(139, 92, 246, 0.08),
+                rgba(124, 58, 237, 0.07),
                 transparent 28%
             ),
             linear-gradient(
                 180deg,
                 #f8fbff 0%,
                 #ffffff 55%,
-                #f7f9fc 100%
+                #f8fafc 100%
             );
     }
 
@@ -99,29 +91,12 @@ st.html(
 
     .block-container {
         padding: 2rem 3rem 4rem;
-        max-width: 1200px;
+        max-width: 1180px;
     }
 
 
     /* ==================================================
-       FORCE STREAMLIT NATIVE TEXT INTO LIGHT MODE
-    ================================================== */
-
-    [data-testid="stAppViewContainer"],
-    [data-testid="stMain"],
-    [data-testid="stVerticalBlock"] {
-        color: #172033 !important;
-    }
-
-    p,
-    li,
-    label {
-        color: #334155;
-    }
-
-
-    /* ==================================================
-       STREAMLIT MARKDOWN
+       MARKDOWN
     ================================================== */
 
     .stMarkdown,
@@ -138,7 +113,7 @@ st.html(
     .stMarkdown h4,
     .stMarkdown h5,
     .stMarkdown h6 {
-        color: #111827 !important;
+        color: #0f172a !important;
     }
 
     .stMarkdown strong,
@@ -162,17 +137,6 @@ st.html(
         border-radius: 4px;
     }
 
-    .stMarkdown pre {
-        background: #f8fafc !important;
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 10px !important;
-    }
-
-    .stMarkdown pre code {
-        color: #334155 !important;
-        background: transparent !important;
-    }
-
 
     /* ==================================================
        HERO
@@ -180,26 +144,26 @@ st.html(
 
     .hero {
         text-align: center;
-        padding: 3.3rem 0 2.2rem;
+        padding: 3.2rem 0 2rem;
     }
 
     .hero-eyebrow {
         font-family: 'DM Mono', monospace;
-        font-size: 0.70rem;
+        font-size: 0.7rem;
         font-weight: 500;
-        letter-spacing: 0.25em;
+        letter-spacing: 0.24em;
         text-transform: uppercase;
         color: #4f46e5;
-        margin-bottom: 1rem;
+        margin-bottom: 0.9rem;
     }
 
     .hero h1 {
         font-family: 'Syne', sans-serif;
-        font-size: clamp(2.8rem, 6vw, 5rem);
+        font-size: clamp(2.8rem, 6vw, 4.8rem);
         font-weight: 800;
         line-height: 1;
         letter-spacing: -0.04em;
-        color: #111827 !important;
+        color: #0f172a !important;
         margin: 0 0 1rem;
     }
 
@@ -215,10 +179,9 @@ st.html(
     }
 
     .hero-sub {
-        font-size: 1.05rem;
-        font-weight: 400;
+        font-size: 1.02rem;
         color: #64748b;
-        max-width: 590px;
+        max-width: 610px;
         margin: 0 auto;
         line-height: 1.7;
     }
@@ -235,11 +198,24 @@ st.html(
             linear-gradient(
                 90deg,
                 transparent,
-                rgba(79, 70, 229, 0.22),
+                rgba(99, 102, 241, 0.20),
                 transparent
             );
 
         margin: 1.8rem 0;
+    }
+
+
+    /* ==================================================
+       SECTION HEADINGS
+    ================================================== */
+
+    .section-heading {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #172033;
+        margin: 1.1rem 0 1rem;
     }
 
 
@@ -249,18 +225,14 @@ st.html(
 
     .stTextInput > div > div > input {
         background: #ffffff !important;
-        border: 1px solid #dbe3ef !important;
-        border-radius: 12px !important;
-
         color: #111827 !important;
         -webkit-text-fill-color: #111827 !important;
 
-        font-family: 'DM Sans', sans-serif !important;
+        border: 1px solid #dbe3ef !important;
+        border-radius: 12px !important;
+
         font-size: 1rem !important;
-
         padding: 0.8rem 1rem !important;
-
-        transition: all 0.2s ease !important;
     }
 
     .stTextInput > div > div > input::placeholder {
@@ -280,7 +252,7 @@ st.html(
     .stTextInput > label {
         font-family: 'DM Mono', monospace !important;
         font-size: 0.72rem !important;
-        letter-spacing: 0.15em !important;
+        letter-spacing: 0.14em !important;
         text-transform: uppercase !important;
         color: #4f46e5 !important;
         font-weight: 500 !important;
@@ -302,22 +274,20 @@ st.html(
         color: #ffffff !important;
         -webkit-text-fill-color: #ffffff !important;
 
+        border: none !important;
+        border-radius: 12px !important;
+
         font-family: 'Syne', sans-serif !important;
         font-weight: 700 !important;
         font-size: 0.95rem !important;
 
-        letter-spacing: 0.03em !important;
-
-        border: none !important;
-        border-radius: 12px !important;
-
-        padding: 0.8rem 2.2rem !important;
-
-        transition: all 0.18s ease !important;
+        padding: 0.8rem 2rem !important;
 
         box-shadow:
-            0 8px 28px
+            0 8px 26px
             rgba(79, 70, 229, 0.18) !important;
+
+        transition: all 0.18s ease !important;
 
         width: 100%;
     }
@@ -327,7 +297,7 @@ st.html(
 
         box-shadow:
             0 12px 32px
-            rgba(79, 70, 229, 0.26) !important;
+            rgba(79, 70, 229, 0.25) !important;
     }
 
     .stButton > button:disabled {
@@ -338,79 +308,35 @@ st.html(
 
 
     /* ==================================================
-       PIPELINE STEP CARDS
+       PIPELINE CARDS
     ================================================== */
 
     .step-card {
-        background: rgba(255, 255, 255, 0.90);
+        background: rgba(255, 255, 255, 0.92);
 
-        border:
-            1px solid #e2e8f0;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
 
-        border-radius: 18px;
-
-        padding: 1.4rem 1.6rem;
-
-        margin-bottom: 1rem;
+        padding: 1.25rem 1.45rem;
+        margin-bottom: 0.9rem;
 
         position: relative;
         overflow: hidden;
 
-        transition: all 0.25s ease;
-
         box-shadow:
-            0 8px 24px
+            0 6px 22px
             rgba(15, 23, 42, 0.04);
+
+        transition: all 0.2s ease;
     }
 
     .step-card:hover {
-        transform: translateY(-2px);
+        transform: translateY(-1px);
 
         box-shadow:
-            0 12px 30px
-            rgba(15, 23, 42, 0.07);
+            0 10px 26px
+            rgba(15, 23, 42, 0.06);
     }
-
-
-    /* ACTIVE */
-
-    .step-card.active {
-        border-color: #6366f1;
-
-        background:
-            linear-gradient(
-                90deg,
-                rgba(238, 242, 255, 0.95),
-                rgba(255, 255, 255, 0.95)
-            );
-
-        box-shadow:
-            0 12px 34px
-            rgba(99, 102, 241, 0.12);
-
-        animation:
-            pulseCard 1.7s
-            ease-in-out infinite;
-    }
-
-
-    /* DONE */
-
-    .step-card.done {
-        border-color: #86efac;
-        background: #f0fdf4;
-    }
-
-
-    /* ERROR */
-
-    .step-card.error {
-        border-color: #fca5a5;
-        background: #fef2f2;
-    }
-
-
-    /* LEFT STATUS BAR */
 
     .step-card::before {
         content: '';
@@ -426,12 +352,45 @@ st.html(
         background: #e2e8f0;
     }
 
+
+    /* ACTIVE */
+
+    .step-card.active {
+        border-color: #818cf8;
+
+        background:
+            linear-gradient(
+                90deg,
+                rgba(238, 242, 255, 0.95),
+                rgba(255, 255, 255, 0.98)
+            );
+
+        animation:
+            pulseCard 1.8s ease-in-out infinite;
+    }
+
     .step-card.active::before {
         background: #6366f1;
     }
 
+
+    /* DONE */
+
+    .step-card.done {
+        border-color: #86efac;
+        background: #f0fdf4;
+    }
+
     .step-card.done::before {
         background: #22c55e;
+    }
+
+
+    /* ERROR */
+
+    .step-card.error {
+        border-color: #fca5a5;
+        background: #fef2f2;
     }
 
     .step-card.error::before {
@@ -443,19 +402,19 @@ st.html(
 
         0% {
             box-shadow:
-                0 8px 28px
+                0 8px 24px
                 rgba(99, 102, 241, 0.08);
         }
 
         50% {
             box-shadow:
-                0 14px 38px
-                rgba(99, 102, 241, 0.20);
+                0 12px 32px
+                rgba(99, 102, 241, 0.18);
         }
 
         100% {
             box-shadow:
-                0 8px 28px
+                0 8px 24px
                 rgba(99, 102, 241, 0.08);
         }
     }
@@ -464,20 +423,20 @@ st.html(
     .step-header {
         display: flex;
         align-items: center;
-        gap: 0.75rem;
+        gap: 0.7rem;
     }
 
     .step-num {
         font-family: 'DM Mono', monospace;
         font-size: 0.68rem;
-        font-weight: 500;
-        letter-spacing: 0.15em;
+        letter-spacing: 0.14em;
         color: #6366f1;
+        font-weight: 500;
     }
 
     .step-title {
         font-family: 'Syne', sans-serif;
-        font-size: 1rem;
+        font-size: 0.98rem;
         font-weight: 700;
         color: #172033;
     }
@@ -487,7 +446,7 @@ st.html(
 
         font-family: 'DM Mono', monospace;
 
-        font-size: 0.68rem;
+        font-size: 0.65rem;
         letter-spacing: 0.08em;
     }
 
@@ -511,59 +470,49 @@ st.html(
     }
 
     .step-desc {
-        font-size: 0.82rem;
+        font-size: 0.8rem;
         color: #64748b;
-        margin-top: 0.45rem;
+        margin-top: 0.4rem;
     }
 
 
     /* ==================================================
-       SECTION HEADINGS
+       EVIDENCE BADGE
     ================================================== */
 
-    .section-heading {
-        font-family: 'Syne', sans-serif;
+    .evidence-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
 
-        font-size: 1.3rem;
-        font-weight: 700;
+        padding: 0.45rem 0.75rem;
 
-        color: #172033;
+        border-radius: 999px;
 
-        margin: 1.2rem 0 1rem;
-    }
-
-
-    /* ==================================================
-       PANEL LABELS
-    ================================================== */
-
-    .panel-label {
         font-family: 'DM Mono', monospace;
+        font-size: 0.68rem;
+        font-weight: 500;
+        letter-spacing: 0.06em;
 
-        font-size: 0.70rem;
-
-        letter-spacing: 0.18em;
-
-        text-transform: uppercase;
-
-        margin-top: 1.5rem;
-        margin-bottom: 0.75rem;
-
-        padding-bottom: 0.7rem;
+        margin-bottom: 0.8rem;
     }
 
-    .panel-label.blue {
-        color: #2563eb;
-
-        border-bottom:
-            1px solid #dbeafe;
+    .badge-grounded {
+        background: #ecfdf5;
+        color: #15803d;
+        border: 1px solid #bbf7d0;
     }
 
-    .panel-label.green {
-        color: #16a34a;
+    .badge-partial {
+        background: #fffbeb;
+        color: #a16207;
+        border: 1px solid #fde68a;
+    }
 
-        border-bottom:
-            1px solid #dcfce7;
+    .badge-model {
+        background: #fef2f2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
     }
 
 
@@ -585,20 +534,7 @@ st.html(
             rgba(15, 23, 42, 0.03);
     }
 
-    div[data-testid="stExpander"] details {
-        background: #ffffff !important;
-        color: #334155 !important;
-    }
-
-    div[data-testid="stExpander"] summary {
-        background: #ffffff !important;
-
-        color: #334155 !important;
-
-        -webkit-text-fill-color:
-            #334155 !important;
-    }
-
+    div[data-testid="stExpander"] summary,
     div[data-testid="stExpander"] summary p,
     div[data-testid="stExpander"] summary span,
     div[data-testid="stExpander"] summary div {
@@ -609,16 +545,19 @@ st.html(
     }
 
     div[data-testid="stExpander"] summary svg {
-        fill: #475569 !important;
         color: #475569 !important;
+        fill: #475569 !important;
     }
 
 
     /* ==================================================
-       TEXT AREA — RAW SEARCH / SCRAPED CONTENT
+       TEXT AREAS
     ================================================== */
 
-    .stTextArea textarea {
+    .stTextArea textarea,
+    .stTextArea textarea:disabled,
+    div[data-baseweb="textarea"] textarea,
+    div[data-testid="stTextArea"] textarea {
         background-color: #f8fafc !important;
 
         color: #1e293b !important;
@@ -626,8 +565,7 @@ st.html(
         -webkit-text-fill-color:
             #1e293b !important;
 
-        caret-color:
-            #1e293b !important;
+        opacity: 1 !important;
 
         border:
             1px solid #e2e8f0 !important;
@@ -640,68 +578,43 @@ st.html(
             monospace !important;
 
         font-size:
-            0.78rem !important;
+            0.77rem !important;
 
         line-height:
-            1.6 !important;
-
-        opacity:
-            1 !important;
-    }
-
-    .stTextArea textarea:disabled {
-        background-color:
-            #f8fafc !important;
-
-        color:
-            #1e293b !important;
-
-        -webkit-text-fill-color:
-            #1e293b !important;
-
-        opacity:
-            1 !important;
-
-        cursor:
-            default !important;
+            1.55 !important;
     }
 
     div[data-baseweb="textarea"] {
         background-color:
             #f8fafc !important;
-
-        color:
-            #1e293b !important;
-    }
-
-    div[data-baseweb="textarea"] textarea {
-        background-color:
-            #f8fafc !important;
-
-        color:
-            #1e293b !important;
-
-        -webkit-text-fill-color:
-            #1e293b !important;
-
-        opacity:
-            1 !important;
-    }
-
-    div[data-testid="stTextArea"] textarea {
-        color:
-            #1e293b !important;
-
-        -webkit-text-fill-color:
-            #1e293b !important;
-
-        opacity:
-            1 !important;
     }
 
 
     /* ==================================================
-       NATIVE STREAMLIT CONTAINERS
+       METRICS
+    ================================================== */
+
+    div[data-testid="stMetric"] {
+        background: #ffffff;
+
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+
+        padding: 1rem 1.2rem;
+
+        box-shadow:
+            0 5px 16px
+            rgba(15, 23, 42, 0.03);
+    }
+
+    div[data-testid="stMetric"] label,
+    div[data-testid="stMetric"] div {
+        color: #334155 !important;
+    }
+
+
+    /* ==================================================
+       CONTAINERS
     ================================================== */
 
     div[data-testid="stVerticalBlockBorderWrapper"] {
@@ -714,8 +627,38 @@ st.html(
             16px !important;
 
         box-shadow:
-            0 8px 24px
+            0 7px 22px
             rgba(15, 23, 42, 0.04);
+    }
+
+
+    /* ==================================================
+       PANEL LABEL
+    ================================================== */
+
+    .panel-label {
+        font-family: 'DM Mono', monospace;
+
+        font-size: 0.70rem;
+
+        letter-spacing: 0.17em;
+
+        text-transform: uppercase;
+
+        margin-top: 1.8rem;
+        margin-bottom: 0.75rem;
+
+        padding-bottom: 0.7rem;
+    }
+
+    .panel-label.blue {
+        color: #2563eb;
+        border-bottom: 1px solid #dbeafe;
+    }
+
+    .panel-label.green {
+        color: #16a34a;
+        border-bottom: 1px solid #dcfce7;
     }
 
 
@@ -724,12 +667,10 @@ st.html(
     ================================================== */
 
     .stDownloadButton > button {
-        border-radius:
-            10px !important;
+        border-radius: 10px !important;
 
         border:
-            1px solid
-            #c7d2fe !important;
+            1px solid #c7d2fe !important;
 
         background:
             #eef2ff !important;
@@ -744,23 +685,12 @@ st.html(
             600 !important;
     }
 
-    .stDownloadButton > button:hover {
-        border-color:
-            #818cf8 !important;
-
-        background:
-            #e0e7ff !important;
-    }
-
 
     /* ==================================================
        ALERTS
     ================================================== */
 
-    div[data-testid="stAlert"] {
-        color: #1e293b !important;
-    }
-
+    div[data-testid="stAlert"],
     div[data-testid="stAlert"] p {
         color: #1e293b !important;
     }
@@ -771,24 +701,16 @@ st.html(
     ================================================== */
 
     .notice {
-        font-family:
-            'DM Mono',
-            monospace;
+        font-family: 'DM Mono', monospace;
 
-        font-size:
-            0.70rem;
+        font-size: 0.68rem;
+        color: #94a3b8;
 
-        color:
-            #94a3b8;
+        text-align: center;
 
-        text-align:
-            center;
+        margin-top: 3rem;
 
-        margin-top:
-            3rem;
-
-        letter-spacing:
-            0.06em;
+        letter-spacing: 0.05em;
     }
 
 
@@ -809,8 +731,7 @@ st.html(
         }
 
         .hero h1 {
-            font-size:
-                2.7rem;
+            font-size: 2.7rem;
         }
     }
 
@@ -828,33 +749,25 @@ PIPELINE_STAGES = [
         "key": "search",
         "num": "01",
         "title": "Search Agent",
-        "description": (
-            "Finds reliable sources and checks research coverage."
-        ),
+        "description": "Finds recent and reliable candidate sources.",
     },
     {
         "key": "scrape",
         "num": "02",
         "title": "Web Scraper",
-        "description": (
-            "Extracts useful text from selected sources."
-        ),
+        "description": "Retrieves usable evidence from selected sources.",
     },
     {
         "key": "write",
         "num": "03",
         "title": "Writer Chain",
-        "description": (
-            "Synthesizes evidence into a structured report."
-        ),
+        "description": "Synthesizes the available evidence into a report.",
     },
     {
         "key": "critique",
         "num": "04",
         "title": "Critic Chain",
-        "description": (
-            "Evaluates accuracy, completeness and grounding."
-        ),
+        "description": "Checks grounding, attribution, and report quality.",
     },
 ]
 
@@ -868,14 +781,14 @@ STAGE_ORDER = [
 
 
 # =========================================================
-# STEP CARD HELPER
+# PIPELINE CARD
 # =========================================================
 
 def step_card(
     num: str,
     title: str,
     state: str,
-    desc: str = "",
+    desc: str,
 ):
 
     status_map = {
@@ -927,12 +840,10 @@ def step_card(
                     {title}
                 </span>
 
-                <span
-                    class="
-                        step-status
-                        {status_class}
-                    "
-                >
+                <span class="
+                    step-status
+                    {status_class}
+                ">
                     {label}
                 </span>
 
@@ -948,7 +859,7 @@ def step_card(
 
 
 # =========================================================
-# DETERMINE PIPELINE STEP STATE
+# PIPELINE STATE LOGIC
 # =========================================================
 
 def get_stage_state(stage: str) -> str:
@@ -963,10 +874,22 @@ def get_stage_state(stage: str) -> str:
 
     if current == "error":
 
-        if stage == st.session_state.get(
-            "failed_stage"
-        ):
+        if stage == st.session_state.failed_stage:
             return "error"
+
+        failed_stage = st.session_state.failed_stage
+
+        if (
+            failed_stage in STAGE_ORDER
+            and stage in STAGE_ORDER
+        ):
+
+            if (
+                STAGE_ORDER.index(stage)
+                <
+                STAGE_ORDER.index(failed_stage)
+            ):
+                return "done"
 
         return "waiting"
 
@@ -978,35 +901,27 @@ def get_stage_state(stage: str) -> str:
         and stage in STAGE_ORDER
     ):
 
-        current_index = STAGE_ORDER.index(
-            current
-        )
-
-        stage_index = STAGE_ORDER.index(
-            stage
-        )
-
-        if stage_index < current_index:
+        if (
+            STAGE_ORDER.index(stage)
+            <
+            STAGE_ORDER.index(current)
+        ):
             return "done"
 
     return "waiting"
 
-
-# =========================================================
-# RENDER PIPELINE
-# =========================================================
 
 def render_pipeline():
 
     for stage in PIPELINE_STAGES:
 
         step_card(
-            stage["num"],
-            stage["title"],
-            get_stage_state(
+            num=stage["num"],
+            title=stage["title"],
+            state=get_stage_state(
                 stage["key"]
             ),
-            stage["description"],
+            desc=stage["description"],
         )
 
 
@@ -1027,10 +942,9 @@ st.html(
         </h1>
 
         <p class="hero-sub">
-            Search the web, extract useful evidence,
-            generate a detailed research report,
-            and critically evaluate its quality
-            through a multi-stage AI workflow.
+            Search the web, retrieve useful evidence,
+            generate a structured report, and evaluate
+            its grounding through a multi-stage AI workflow.
         </p>
 
     </div>
@@ -1123,7 +1037,7 @@ with col_input:
 
 
 # =========================================================
-# RIGHT — LIVE PIPELINE
+# RIGHT — PIPELINE
 # =========================================================
 
 with col_pipeline:
@@ -1143,7 +1057,7 @@ with col_pipeline:
 
 
 # =========================================================
-# LIVE PROGRESS CALLBACK
+# PROGRESS CALLBACK
 # =========================================================
 
 def update_progress(stage: str):
@@ -1159,14 +1073,15 @@ def update_progress(stage: str):
                 previous_stage
             )
 
+        st.session_state.current_stage = (
+            "error"
+        )
+
     else:
 
         st.session_state.current_stage = (
             stage
         )
-
-    if stage == "error":
-        st.session_state.current_stage = "error"
 
     pipeline_placeholder.empty()
 
@@ -1191,14 +1106,9 @@ if run_btn:
     else:
 
         st.session_state.results = None
-
         st.session_state.running = True
-
-        st.session_state.current_stage = (
-            "search"
-        )
-
         st.session_state.failed_stage = None
+        st.session_state.current_stage = "search"
 
         update_progress("search")
 
@@ -1206,41 +1116,17 @@ if run_btn:
 
             result = research_pipeline(
                 clean_topic,
-                progress_callback=(
-                    update_progress
-                ),
+                progress_callback=update_progress,
             )
 
-            st.session_state.results = (
-                result
-            )
-
-            st.session_state.running = (
-                False
-            )
+            st.session_state.results = result
+            st.session_state.running = False
 
             if isinstance(result, dict):
 
-                st.session_state.current_stage = (
-                    "done"
-                )
-
                 update_progress("done")
 
-            elif isinstance(result, str):
-
-                if (
-                    st.session_state.current_stage
-                    != "error"
-                ):
-                    update_progress("error")
-
             else:
-
-                st.session_state.results = (
-                    "The pipeline returned "
-                    "an unexpected result."
-                )
 
                 update_progress("error")
 
@@ -1248,11 +1134,11 @@ if run_btn:
 
             st.session_state.running = False
 
-            update_progress("error")
-
             st.session_state.results = (
                 f"Pipeline failed: {exc}"
             )
+
+            update_progress("error")
 
 
 # =========================================================
@@ -1276,7 +1162,7 @@ if result is not None:
 
 
     # =====================================================
-    # ERROR RESULT
+    # ERROR
     # =====================================================
 
     if isinstance(result, str):
@@ -1285,7 +1171,7 @@ if result is not None:
 
 
     # =====================================================
-    # SUCCESS RESULT
+    # SUCCESS
     # =====================================================
 
     elif isinstance(result, dict):
@@ -1297,6 +1183,21 @@ if result is not None:
 
         scraped_content = result.get(
             "scraped_content",
+            "",
+        )
+
+        successful_sources = result.get(
+            "successful_sources",
+            [],
+        )
+
+        failed_sources = result.get(
+            "failed_sources",
+            [],
+        )
+
+        evidence_mode = result.get(
+            "evidence_mode",
             "",
         )
 
@@ -1312,7 +1213,126 @@ if result is not None:
 
 
         # =================================================
-        # RAW SEARCH RESULTS
+        # EVIDENCE STATUS
+        # =================================================
+
+        st.html(
+            """
+            <div class="section-heading">
+                Evidence Status
+            </div>
+            """
+        )
+
+
+        # -------------------------------------------------
+        # Grounded
+        # -------------------------------------------------
+
+        if evidence_mode == "grounded":
+
+            st.html(
+                """
+                <div class="
+                    evidence-badge
+                    badge-grounded
+                ">
+                    ✓ GROUNDED
+                </div>
+                """
+            )
+
+            st.success(
+                (
+                    f"{len(successful_sources)} "
+                    "sources were successfully "
+                    "retrieved and used as evidence."
+                )
+            )
+
+
+        # -------------------------------------------------
+        # Partially grounded
+        # -------------------------------------------------
+
+        elif evidence_mode == "partially_grounded":
+
+            st.html(
+                """
+                <div class="
+                    evidence-badge
+                    badge-partial
+                ">
+                    ⚠ PARTIALLY GROUNDED
+                </div>
+                """
+            )
+
+            st.warning(
+                (
+                    f"{len(successful_sources)} "
+                    "source(s) were successfully retrieved, "
+                    f"while {len(failed_sources)} "
+                    "source(s) could not be accessed. "
+                    "The report may use clearly identified "
+                    "model knowledge where evidence is limited."
+                )
+            )
+
+
+        # -------------------------------------------------
+        # Model-generated fallback
+        # -------------------------------------------------
+
+        elif evidence_mode == "model_generated":
+
+            st.html(
+                """
+                <div class="
+                    evidence-badge
+                    badge-model
+                ">
+                    ⚠ MODEL-GENERATED FALLBACK
+                </div>
+                """
+            )
+
+            st.error(
+                (
+                    "None of the selected webpages could "
+                    "be successfully retrieved. "
+                    "The report therefore relies primarily "
+                    "on model knowledge and should not be "
+                    "treated as externally verified."
+                )
+            )
+
+
+        # =================================================
+        # SOURCE METRICS
+        # =================================================
+
+        metric_success, metric_failed = (
+            st.columns(2)
+        )
+
+        with metric_success:
+
+            st.metric(
+                label="Retrieved Sources",
+                value=len(successful_sources),
+            )
+
+        with metric_failed:
+
+            st.metric(
+                label="Retrieval Failures",
+                value=len(failed_sources),
+            )
+
+
+        # =================================================
+        # SEARCH RESULTS
         # =================================================
 
         if search_results:
@@ -1333,18 +1353,18 @@ if result is not None:
 
 
         # =================================================
-        # SCRAPED CONTENT
+        # SCRAPED RESEARCH
         # =================================================
 
         if scraped_content:
 
             with st.expander(
-                "📄 Scraped Research",
+                "📄 Retrieval Details",
                 expanded=False,
             ):
 
                 st.text_area(
-                    "Scraped content",
+                    "Retrieval details",
                     value=scraped_content,
                     height=420,
                     disabled=True,
@@ -1354,7 +1374,92 @@ if result is not None:
 
 
         # =================================================
-        # FINAL REPORT
+        # SUCCESSFUL SOURCES
+        # =================================================
+
+        if successful_sources:
+
+            with st.expander(
+                "✅ Successfully Retrieved Sources",
+                expanded=False,
+            ):
+
+                for index, source in enumerate(
+                    successful_sources,
+                    start=1,
+                ):
+
+                    st.markdown(
+                        f"### Source {index}"
+                    )
+
+                    st.markdown(
+                        f"**URL:** {source.get('url', '')}"
+                    )
+
+                    st.markdown(
+                        "**Status:** Successfully retrieved"
+                    )
+
+                    if (
+                        index
+                        <
+                        len(successful_sources)
+                    ):
+                        st.divider()
+
+
+        # =================================================
+        # FAILED SOURCES
+        # =================================================
+
+        if failed_sources:
+
+            with st.expander(
+                "⚠️ Retrieval Failures",
+                expanded=False,
+            ):
+
+                for index, source in enumerate(
+                    failed_sources,
+                    start=1,
+                ):
+
+                    st.markdown(
+                        f"### Failed Source {index}"
+                    )
+
+                    st.markdown(
+                        f"**URL:** {source.get('url', '')}"
+                    )
+
+                    reason = source.get(
+                        "reason",
+                        "Unknown retrieval error.",
+                    )
+
+                    st.text_area(
+                        "Failure reason",
+                        value=reason,
+                        height=110,
+                        disabled=True,
+                        label_visibility="collapsed",
+                        key=(
+                            f"failed_source_"
+                            f"{index}_reason"
+                        ),
+                    )
+
+                    if (
+                        index
+                        <
+                        len(failed_sources)
+                    ):
+                        st.divider()
+
+
+        # =================================================
+        # REPORT
         # =================================================
 
         if report:
@@ -1377,22 +1482,20 @@ if result is not None:
                     report
                 )
 
+
             st.download_button(
-                label=(
-                    "⬇ Download Report (.md)"
-                ),
+                label="⬇ Download Report (.md)",
                 data=report,
                 file_name=(
                     "research_report_"
                     f"{int(time.time())}.md"
                 ),
                 mime="text/markdown",
-                use_container_width=False,
             )
 
 
         # =================================================
-        # CRITIC FEEDBACK
+        # CRITIC
         # =================================================
 
         if critique:
@@ -1423,9 +1526,11 @@ if result is not None:
 st.html(
     """
     <div class="notice">
+
         ResearcherAgent ·
-        Search → Scrape → Write → Critique ·
+        Search → Retrieve → Write → Critique ·
         Built with LangChain & Streamlit
+
     </div>
     """
 )
